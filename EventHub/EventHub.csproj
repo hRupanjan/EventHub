@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Rupanjan Hari</Authors>
+    <Description>This is a project that implements the Pub/Sub model in a decoupled architecture. It can be especially useful in situations where entities have there own life-cycle.</Description>
+    <RepositoryType />
+  </PropertyGroup>
+
+</Project>
