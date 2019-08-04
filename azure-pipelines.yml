@@ -20,3 +20,22 @@ steps:
 
 - script: dotnet test $(testProjectName)
   displayName: 'dotnet test'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack'
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/EventHub.csproj'
+    configuration: '$(buildConfiguration)'
+    versioningScheme: 'byPrereleaseNumber'
+    majorVersion: '1'
+    minorVersion: '0'
+    patchVersion: '0'
+    
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet nuget push'
+  inputs:
+    command: 'push'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    nuGetFeedType: 'internal'
+    publishVstsFeed: '756019a8-6230-4307-a470-c82ea4fd61dd'
