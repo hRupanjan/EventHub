@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EventHub
+namespace EventHubProject
 {
     class RealHub : EventHub
     {

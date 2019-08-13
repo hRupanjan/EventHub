@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EventHub
+namespace EventHubProject
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed class EventSubscriberAttribute : Attribute

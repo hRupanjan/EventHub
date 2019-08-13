@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace EventHub.Tests
+namespace EventHubProject.Tests
 {
     internal class A : B
     {

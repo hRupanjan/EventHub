@@ -1,6 +1,9 @@
 ﻿using System;
-namespace EventHub
+namespace EventHubProject
 {
+    /// <summary>
+    /// The class for calling the EventHub
+    /// </summary>
     public abstract class EventHub
     {
         private static EventHub defaultInstance;
@@ -16,6 +19,9 @@ namespace EventHub
                 return defaultInstance;
             }
         }
+        /// <summary>
+        /// The default constructor for the EventHub
+        /// </summary>
         protected EventHub()
         {
 

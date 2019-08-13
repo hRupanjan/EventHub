@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace EventHub
+namespace EventHubProject
 {
     internal class TaskTuple
     {

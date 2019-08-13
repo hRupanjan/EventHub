@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace EventHub
+namespace EventHubProject
 {
     internal class CalleeMethod
     {

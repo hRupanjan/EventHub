@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventHub.Tests
+namespace EventHubProject.Tests
 {
     [TestFixture]
     public class EventPushTests

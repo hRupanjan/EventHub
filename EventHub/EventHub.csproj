@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,6 +6,12 @@
     <Authors>Rupanjan Hari</Authors>
     <Description>This is a project that implements the Pub/Sub model in a decoupled architecture. It can be especially useful in situations where entities have there own life-cycle.</Description>
     <RepositoryType />
+    <RootNamespace>EventHubProject</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Users\NatureDev\source\repos\EventHub\EventHub\EventHub.xml</DocumentationFile>
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EventHub
+namespace EventHubProject
 {
     public class EventHubException : Exception
     {

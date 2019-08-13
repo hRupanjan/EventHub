@@ -3,7 +3,7 @@
 using NUnit.Framework;
 using System.Threading.Tasks;
 
-namespace EventHub.Tests
+namespace EventHubProject.Tests
 {
     [TestFixture]
     public class SubscriberClassTests

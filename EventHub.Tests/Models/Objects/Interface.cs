@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventHub.Tests
+namespace EventHubProject.Tests
 {
     internal interface Interface
     {
