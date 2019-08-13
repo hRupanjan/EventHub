@@ -10,8 +10,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\Users\NatureDev\source\repos\EventHub\EventHub\EventHub.xml</DocumentationFile>
     <Optimize>true</Optimize>
+    <OutputPath>.\bin\$(Configuration)</OutputPath>
+    <DocumentationFile>$(OutputPath)\EventHub.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>.\bin\$(Configuration)</OutputPath>
+    <DocumentationFile>$(OutputPath)\EventHub.xml</DocumentationFile>
   </PropertyGroup>
 
 </Project>
