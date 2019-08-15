@@ -5,8 +5,12 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Rupanjan Hari</Authors>
     <Description>This is a project that implements the Pub/Sub model in a decoupled architecture. It can be especially useful in situations where entities have there own life-cycle.</Description>
-    <RepositoryType />
+    <RepositoryType>Private</RepositoryType>
+    <RepositoryUrl>https://github.com/hRupanjan/EventHub</RepositoryUrl>
     <RootNamespace>EventHubProject</RootNamespace>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <SignAssembly>false</SignAssembly>
+    <PackageIconUrl>https://drive.google.com/open?id=1o9X4iEh1LTuDVCLDbz6GFTMuBrmSos0x</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,5 +23,12 @@
     <OutputPath>.\bin\$(Configuration)</OutputPath>
     <DocumentationFile>$(OutputPath)\EventHub.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
