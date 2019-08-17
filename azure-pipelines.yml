@@ -15,14 +15,19 @@ variables:
   testProjectName: 'EventHub.Tests'
 
 steps:
-- script: dotnet build $(projectName) --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
-
-- script: dotnet test $(testProjectName)
-  displayName: 'dotnet test'
-
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet pack'
+  displayName: 'Build $(projectName) $(buildConfiguration)'
+  inputs:
+    command: 'build'
+    projects: '$(projectName)'
+    arguments: '--configuration $(buildConfiguration)'
+- task: DotNetCoreCLI@2
+  displayName: 'Test $(testProjectName)'
+  inputs:
+    command: 'test'
+    projects: '$(testProjectName)'
+- task: DotNetCoreCLI@2
+  displayName: 'Pack $(projectName)'
   inputs:
     command: 'pack'
     packagesToPack: '**/EventHub.csproj'
@@ -31,15 +36,15 @@ steps:
     majorVersion: '1'
     minorVersion: '0'
     patchVersion: '0'
-    
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet nuget push'
+  displayName: 'Push to Local Feed'
   inputs:
     command: 'push'
     packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
     nuGetFeedType: 'internal'
     publishVstsFeed: '756019a8-6230-4307-a470-c82ea4fd61dd'
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish BuildArtifacts'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
