@@ -5,23 +5,28 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Rupanjan Hari</Authors>
     <Description>This is a project that implements the Pub/Sub model in a decoupled architecture. It can be especially useful in situations where entities have there own life-cycle.</Description>
-    <RepositoryType>Private</RepositoryType>
+    <RepositoryType>Public</RepositoryType>
     <RepositoryUrl>https://github.com/hRupanjan/EventHub</RepositoryUrl>
     <RootNamespace>EventHubProject</RootNamespace>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <SignAssembly>false</SignAssembly>
-    <PackageIconUrl>https://drive.google.com/open?id=1o9X4iEh1LTuDVCLDbz6GFTMuBrmSos0x</PackageIconUrl>
+    <PackageIconUrl>https://imge.to/images/2019/08/17/VJRPx.png</PackageIconUrl>
+    <PackageProjectUrl>https://www.nuget.org/packages/EventHub</PackageProjectUrl>
+    <PackageTags>xamarin xamarin-plugin xamarin.forms xamarin.android xamarin.ios</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Optimize>true</Optimize>
     <OutputPath>.\bin\$(Configuration)</OutputPath>
     <DocumentationFile>$(OutputPath)\EventHub.xml</DocumentationFile>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>.\bin\$(Configuration)</OutputPath>
     <DocumentationFile>$(OutputPath)\EventHub.xml</DocumentationFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

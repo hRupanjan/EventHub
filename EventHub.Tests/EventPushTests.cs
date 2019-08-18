@@ -51,5 +51,17 @@ namespace EventHubProject.Tests
             Assert.That(a.SubMethodHit, Is.Not.EqualTo(true), $"'{obj.GetType().FullName}' subscriber was hit in '{a.GetType().FullName}'");
             Assert.That(a.obj, Is.Not.EqualTo(obj), $"Data was changed in '{a.GetType().FullName}'");
         }
+        [Test, Description("A partial class distributed events should be called")]
+        public void PartialClassEventSubscriberShouldRecieveEvent()
+        {
+            var p = new P();
+            EventHub.Instance.Register(p);
+            int testData = 1;
+            var obj = new ObjectClass { SubData = testData };
+            EventHub.Instance.Post(obj);
+            Task.Delay(100).Wait();
+            Assert.That(p.MethodHit, Is.EqualTo(true), $"'{obj.GetType().FullName}' subscriber wasn't hit in '{p.GetType().FullName}'");
+            Assert.That(p.obj, Is.EqualTo(obj), $"Data wasn't changed in '{p.GetType().FullName}'");
+        }
     }
 }

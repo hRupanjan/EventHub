@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EventHub": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

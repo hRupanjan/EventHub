@@ -115,4 +115,20 @@ namespace EventHubProject.Tests
 
         }
     }
+
+    internal partial class P
+    {
+        public ObjectClass obj = new ObjectClass { };
+        public bool MethodHit = false;
+    }
+
+    internal partial class P
+    {
+        [EventSubscriber]
+        public void Subscriber(ObjectClass obj)
+        {
+            this.obj = obj;
+            MethodHit = true;
+        }
+    }
 }
