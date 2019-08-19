@@ -36,7 +36,7 @@ steps:
     packagesToPack: '**/EventHub.csproj'
     configuration: '$(buildConfiguration)'
     versioningScheme: 'byEnvVar'
-    versionEnvVar: '$(version)'
+    versionEnvVar: version
 
 - task: DotNetCoreCLI@2
   displayName: 'Push to Local Feed'
