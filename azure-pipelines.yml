@@ -13,6 +13,7 @@ variables:
   buildConfiguration: 'Release'
   projectName: 'EventHub'
   testProjectName: 'EventHub.Tests'
+  version: '1.0.0'
 
 steps:
 - task: DotNetCoreCLI@2
@@ -21,21 +22,22 @@ steps:
     command: 'build'
     projects: '$(projectName)'
     arguments: '--configuration $(buildConfiguration)'
+
 - task: DotNetCoreCLI@2
   displayName: 'Test $(testProjectName)'
   inputs:
     command: 'test'
     projects: '$(testProjectName)'
+
 - task: DotNetCoreCLI@2
   displayName: 'Pack $(projectName)'
   inputs:
     command: 'pack'
     packagesToPack: '**/EventHub.csproj'
     configuration: '$(buildConfiguration)'
-    versioningScheme: 'byPrereleaseNumber'
-    majorVersion: '1'
-    minorVersion: '0'
-    patchVersion: '0'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: '$(version)'
+
 - task: DotNetCoreCLI@2
   displayName: 'Push to Local Feed'
   inputs:
@@ -43,6 +45,7 @@ steps:
     packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
     nuGetFeedType: 'internal'
     publishVstsFeed: '756019a8-6230-4307-a470-c82ea4fd61dd'
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish BuildArtifacts'
   inputs:
