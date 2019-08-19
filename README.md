@@ -16,9 +16,9 @@ It helps in seamless communication between various parts of the respective appli
 - **Main thread delivery**: Using platform specific main thread invocation methods, you can also deliver UI changes to the application.
 - **No 3rd party dependency**: This is no Xamarin binding, thus no 3rd party dependency or binding difficulties.
 ## Add EventHub to your Project
-[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/EventHub)](https://www.nuget.org/packages/EventHub)
+[![Nuget](https://img.shields.io/nuget/vpre/EventHub)](https://www.nuget.org/packages/EventHub)
 
-The project is still in pre-release mode, but will be releasing a stable version soon.
+:sparkles: :sparkles: **The first stable version of the project is released** :tada:
 ## Steps to use EventHub
 - Define classes for evevnts
     ```csharp
