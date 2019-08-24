@@ -131,4 +131,14 @@ namespace EventHubProject.Tests
             MethodHit = true;
         }
     }
+
+    internal class M
+    {
+        public int Number { get; set; }
+        [EventSubscriber]
+        public void Subscriber(int i)
+        {
+            this.Number = i;
+        }
+    }
 }
