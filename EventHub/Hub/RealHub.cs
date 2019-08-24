@@ -10,14 +10,14 @@ namespace EventHubProject
 {
     class RealHub : EventHub
     {
-        private static Dictionary<string, Dictionary<string, CalleeMethod>> subscriberCallDictionary;
-        private static Dictionary<string, List<WeakReference<object>>> registeredClasses;
+        private static ConcurrentDictionary<string, Dictionary<string, CalleeMethod>> subscriberCallDictionary;
+        private static ConcurrentDictionary<string, List<WeakReference<object>>> registeredClasses;
         private static ConcurrentDictionary<Guid, TaskTuple> asyncTasks;
 
         public RealHub()
         {
-            subscriberCallDictionary = new Dictionary<string, Dictionary<string, CalleeMethod>>();
-            registeredClasses = new Dictionary<string, List<WeakReference<object>>>();
+            subscriberCallDictionary = new ConcurrentDictionary<string, Dictionary<string, CalleeMethod>>();
+            registeredClasses = new ConcurrentDictionary<string, List<WeakReference<object>>>();
             asyncTasks = new ConcurrentDictionary<Guid, TaskTuple>();
         }
 
@@ -203,7 +203,7 @@ namespace EventHubProject
             int classCount = classes.Count();
             if (classCount == 0)
             {
-                registeredClasses.Add(subscriberClassType.FullName, new List<WeakReference<object>>());
+                registeredClasses.TryAdd(subscriberClassType.FullName, new List<WeakReference<object>>());
                 var list = registeredClasses[subscriberClassType.FullName];
                 list.Add(new WeakReference<object>(subscribingClass, false));
                 registeredClasses[subscriberClassType.FullName] = list;
@@ -239,7 +239,8 @@ namespace EventHubProject
                     list[0].TryGetTarget(out o);
                     if (o == null || o == subscribingClass)
                     {
-                        registeredClasses.Remove(subscriberClassType.FullName);
+                        List<WeakReference<object>> references;
+                        registeredClasses.TryRemove(subscriberClassType.FullName, out references);
                     }
                 }
                 else if (list.Count() > 1)
@@ -283,7 +284,7 @@ namespace EventHubProject
                             bool hasSubscriber = subscriberCallDictionary.ContainsKey(subscriberClassType.FullName);
                             if (!hasSubscriber)
                             {
-                                subscriberCallDictionary.Add(subscriberClassType.FullName, new Dictionary<string, CalleeMethod>());
+                                subscriberCallDictionary.TryAdd(subscriberClassType.FullName, new Dictionary<string, CalleeMethod>());
                             }
 
                             var parameters = method.GetParameters();
