@@ -24,5 +24,11 @@ namespace EventHubProject
         {
 
         }
+        /// <summary>
+        /// Creates a default instance of the <see cref="EventHubProject.EventHubException"/> class
+        /// </summary>
+        public EventHubException()
+        {
+        }
     }
 }

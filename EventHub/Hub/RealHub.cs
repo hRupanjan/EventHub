@@ -13,6 +13,7 @@ namespace EventHubProject
         private static ConcurrentDictionary<string, Dictionary<string, CalleeMethod>> subscriberCallDictionary;
         private static ConcurrentDictionary<string, List<WeakReference<object>>> registeredClasses;
         private static ConcurrentDictionary<Guid, TaskTuple> asyncTasks;
+        private readonly object lockObject = new object();
 
         public RealHub()
         {
@@ -23,7 +24,7 @@ namespace EventHubProject
 
         public override void Register(object subscribingClass)
         {
-            lock (this)
+            lock (lockObject)
             {
                 if (subscribingClass == null)
                 {
@@ -38,7 +39,7 @@ namespace EventHubProject
         }
         public override void Deregister(object subscribingClass)
         {
-            lock (this)
+            lock (lockObject)
             {
                 if (subscribingClass == null)
                 {
@@ -100,6 +101,7 @@ namespace EventHubProject
             }
             else
             {
+                var canT = new CancellationTokenSource();
                 Task.Factory.StartNew(() =>
                 {
                     List<CalleeMethod> calleeList = new List<CalleeMethod>();
@@ -145,6 +147,17 @@ namespace EventHubProject
                                                     asyncTasks.TryRemove(id, out temp);
                                                 }
                                             }, canToken.Token);
+                                            t.ContinueWith(task =>
+                                            {
+                                                if (task.IsFaulted)
+                                                {
+                                                    InvokeOnCallFailure(task.Exception);
+                                                }
+                                                else if (task.IsCanceled)
+                                                {
+                                                    //TODO: Call Global Cancellation Notifier
+                                                }
+                                            }, TaskScheduler.Default);
                                             asyncTasks.TryAdd(id, new TaskTuple { RunnableTask = t, CancellationToken = canToken, Event = eventType }); // TODO: Multiple tasks for different registerars on the same event triggers error
                                             t.Start();
                                             break;
@@ -155,7 +168,7 @@ namespace EventHubProject
                             registeredClasses[callee.Method.DeclaringType.FullName] = list;
                         }
                     }
-                });
+                }, canT.Token, TaskCreationOptions.None, TaskScheduler.Default);
             }
         }
 
@@ -166,7 +179,7 @@ namespace EventHubProject
                 throw new NullReferenceException();
             }
             var tasks = asyncTasks.Where(r => r.Value.Event == eventType);
-            if (tasks.Count() > 0)
+            if (tasks.Any())
             {
                 foreach (var task in tasks)
                 {
@@ -199,7 +212,7 @@ namespace EventHubProject
         private void RegisterClass(object subscribingClass)
         {
             Type subscriberClassType = subscribingClass.GetType();
-            var classes = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName));
+            var classes = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName, StringComparison.InvariantCulture));
             int classCount = classes.Count();
             if (classCount == 0)
             {
@@ -211,29 +224,28 @@ namespace EventHubProject
             else
             {
                 var lst = registeredClasses[subscriberClassType.FullName];
-                if (lst.Where(r =>
+                if (!lst.Where(r =>
                 {
                     object o;
                     r.TryGetTarget(out o);
                     return o == subscribingClass;
-                }).Count() == 0)
+                }).Any())
                 {
                     var list = registeredClasses[subscriberClassType.FullName];
                     list.Add(new WeakReference<object>(subscribingClass, false));
                     registeredClasses[subscriberClassType.FullName] = list;
                 }
             }
-
         }
 
         private void DeregisterClass(object subscribingClass)
         {
             Type subscriberClassType = subscribingClass.GetType();
-            int classCount = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName)).Count();
+            int classCount = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName, StringComparison.InvariantCulture)).Count();
             if (classCount == 1)
             {
                 var list = registeredClasses[subscriberClassType.FullName];
-                if (list.Count() == 1)
+                if (list.Count == 1)
                 {
                     object o;
                     list[0].TryGetTarget(out o);
@@ -243,7 +255,7 @@ namespace EventHubProject
                         registeredClasses.TryRemove(subscriberClassType.FullName, out references);
                     }
                 }
-                else if (list.Count() > 1)
+                else if (list.Count > 1)
                 {
                     List<WeakReference<object>> newList = new List<WeakReference<object>>();
                     list?.ForEach((r) =>
@@ -277,42 +289,43 @@ namespace EventHubProject
                     if (attribs != null && attribs.Length == 1)
                     {
                         var attrib = ((EventSubscriberAttribute)attribs[0]);
-                        var paramCount = method.GetParameters().Count();
+                        var paramCount = method.GetParameters().Length;
                         if (paramCount == 1)
                         {
-                            var callee = new CalleeMethod { Method = method, Mode = attrib.Mode };
-                            bool hasSubscriber = subscriberCallDictionary.ContainsKey(subscriberClassType.FullName);
-                            if (!hasSubscriber)
-                            {
-                                subscriberCallDictionary.TryAdd(subscriberClassType.FullName, new Dictionary<string, CalleeMethod>());
-                            }
+                            //var callee = new CalleeMethod { Method = method, Mode = attrib.Mode };
+                            //bool hasSubscriber = subscriberCallDictionary.ContainsKey(subscriberClassType.FullName);
+                            //if (!hasSubscriber)
+                            //{
+                            //    subscriberCallDictionary.TryAdd(subscriberClassType.FullName, new Dictionary<string, CalleeMethod>());
+                            //}
 
-                            var parameters = method.GetParameters();
-                            var dict = subscriberCallDictionary[subscriberClassType.FullName];
-                            var hasParam = dict.ContainsKey(parameters[0].ParameterType.FullName);
-                            if (!hasParam)
-                            {
-                                flag = true;
-                                dict.Add(parameters[0].ParameterType.FullName, callee);
-                                subscriberCallDictionary[subscriberClassType.FullName] = dict;
-                            }
-                            else
-                            {
-                                var oldCallee = dict[parameters[0].ParameterType.FullName];
-                                bool checker = subscriberClassType.FullName.Equals(method.DeclaringType.FullName) && !subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName);
-                                //if (!checker) checker = checker || (TypeComparer(subscriberClassType, method.DeclaringType, (a, b) => { return a.FullName.Equals(b.FullName); }) && method.Attributes.HasFlag(MethodAttributes.NewSlot));
-                                if (checker)
-                                {
-                                    flag = true;
-                                    dict.Remove(parameters[0].ParameterType.FullName);
-                                    dict.Add(parameters[0].ParameterType.FullName, callee);
-                                    subscriberCallDictionary[subscriberClassType.FullName] = dict;
-                                }
-                                else if (subscriberClassType.FullName.Equals(method.DeclaringType.FullName) && subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName))
-                                {
-                                    throw new EventHubException($"There are multiple subscribed methods with the parameter of type '{parameters[0].ParameterType.FullName}'");
-                                }
-                            }
+                            //var parameters = method.GetParameters();
+                            //var dict = subscriberCallDictionary[subscriberClassType.FullName];
+                            //var hasParam = dict.ContainsKey(parameters[0].ParameterType.FullName);
+                            //if (!hasParam)
+                            //{
+                            //    flag = true;
+                            //    dict.Add(parameters[0].ParameterType.FullName, callee);
+                            //    subscriberCallDictionary[subscriberClassType.FullName] = dict;
+                            //}
+                            //else
+                            //{
+                            //    var oldCallee = dict[parameters[0].ParameterType.FullName];
+                            //    bool checker = subscriberClassType.FullName.Equals(method.DeclaringType.FullName, StringComparison.InvariantCulture) && !subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName, StringComparison.InvariantCulture);
+                            //    //if (!checker) checker = checker || (TypeComparer(subscriberClassType, method.DeclaringType, (a, b) => { return a.FullName.Equals(b.FullName); }) && method.Attributes.HasFlag(MethodAttributes.NewSlot));
+                            //    if (checker)
+                            //    {
+                            //        flag = true;
+                            //        dict.Remove(parameters[0].ParameterType.FullName);
+                            //        dict.Add(parameters[0].ParameterType.FullName, callee);
+                            //        subscriberCallDictionary[subscriberClassType.FullName] = dict;
+                            //    }
+                            //    else if (subscriberClassType.FullName.Equals(method.DeclaringType.FullName, StringComparison.InvariantCulture) && subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName, StringComparison.InvariantCulture))
+                            //    {
+                            //        throw new EventHubException($"There are multiple subscribed methods with the parameter of type '{parameters[0].ParameterType.FullName}'");
+                            //    }
+                            //}
+                            flag = RegisterMethod(method, attrib.Mode, subscriberClassType, flag);
                         }
                         else
                         {
@@ -329,6 +342,105 @@ namespace EventHubProject
                 }
             }
             return flag;
+        }
+
+        private bool RegisterMethod(MethodInfo method, ThreadMode mode, Type subscriberClassType, bool preFlag = false)
+        {
+            bool flag = preFlag;
+            var callee = new CalleeMethod { Method = method, Mode = mode };
+            bool hasSubscriber = subscriberCallDictionary.ContainsKey(subscriberClassType.FullName);
+            if (!hasSubscriber)
+            {
+                subscriberCallDictionary.TryAdd(subscriberClassType.FullName, new Dictionary<string, CalleeMethod>());
+            }
+
+            var parameters = method.GetParameters();
+            var dict = subscriberCallDictionary[subscriberClassType.FullName];
+            var hasParam = dict.ContainsKey(parameters[0].ParameterType.FullName);
+            if (!hasParam)
+            {
+                flag = true;
+                dict.Add(parameters[0].ParameterType.FullName, callee);
+                subscriberCallDictionary[subscriberClassType.FullName] = dict;
+            }
+            else
+            {
+                var oldCallee = dict[parameters[0].ParameterType.FullName];
+                bool checker = subscriberClassType.FullName.Equals(method.DeclaringType.FullName, StringComparison.InvariantCulture) && !subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName, StringComparison.InvariantCulture);
+                //if (!checker) checker = checker || (TypeComparer(subscriberClassType, method.DeclaringType, (a, b) => { return a.FullName.Equals(b.FullName); }) && method.Attributes.HasFlag(MethodAttributes.NewSlot));
+                if (checker)
+                {
+                    flag = true;
+                    dict.Remove(parameters[0].ParameterType.FullName);
+                    dict.Add(parameters[0].ParameterType.FullName, callee);
+                    subscriberCallDictionary[subscriberClassType.FullName] = dict;
+                }
+                else if (subscriberClassType.FullName.Equals(method.DeclaringType.FullName, StringComparison.InvariantCulture) && subscriberClassType.FullName.Equals(oldCallee.Method.DeclaringType.FullName, StringComparison.InvariantCulture))
+                {
+                    throw new EventHubException($"There are multiple subscribed methods with the parameter of type '{parameters[0].ParameterType.FullName}'");
+                }
+            }
+            return flag;
+        }
+
+        public override void Register<T>(Action<T> actionOnEvent)
+        {
+            var method = actionOnEvent.Method;
+            var subscribingClass = actionOnEvent.Target;
+            var subscriberClassType = subscribingClass.GetType();
+            var classes = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName, StringComparison.InvariantCulture));
+            int classCount = classes.Count();
+            if (classCount == 0)
+            {
+                registeredClasses.TryAdd(subscriberClassType.FullName, new List<WeakReference<object>>());
+                var list = registeredClasses[subscriberClassType.FullName];
+                list.Add(new WeakReference<object>(subscribingClass, false));
+                registeredClasses[subscriberClassType.FullName] = list;
+            }
+            else
+            {
+                var lst = registeredClasses[subscriberClassType.FullName];
+                if (!lst.Where(r =>
+                {
+                    object o;
+                    r.TryGetTarget(out o);
+                    return o == subscribingClass;
+                }).Any())
+                {
+                    var list = registeredClasses[subscriberClassType.FullName];
+                    list.Add(new WeakReference<object>(subscribingClass, false));
+                    registeredClasses[subscriberClassType.FullName] = list;
+                }
+            }
+
+            bool flag = RegisterMethod(method, ThreadMode.Async, subscriberClassType);
+        }
+
+        public override void Deregister<T>(Action<T> actionOnEvent)
+        {
+            var subscribingClass = actionOnEvent.Target;
+            var method = actionOnEvent.Method;
+            var parameters = method.GetParameters();
+            Type subscriberClassType = subscribingClass.GetType();
+            int classCount = registeredClasses.Keys.Where(r => r.Equals(subscriberClassType.FullName, StringComparison.InvariantCulture)).Count();
+            /* TODO: Prepare an exclusion list of methods for every subscriber instance
+             * If the method is in the exclusion list, don't call it for the instance.
+             * While deregestering the method, check all 'registeredClasses' instance list
+             * if (list.Count == 1) {
+             * Extract list 
+             *      if (it has this one and only method)
+             *      {
+             *          delete the instance from the registered list
+             *          if (method is present in the exlusion list for the instance) { delete the method from the exclusion list }
+             *      }
+             * }
+             * else
+             * {
+             *      find the instance in the list
+             *      pull out the exclusion list from the dictionary
+             *      exclude the method for this instance and save it
+             * }
+            */
         }
     }
 }

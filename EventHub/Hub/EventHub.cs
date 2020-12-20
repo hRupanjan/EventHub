@@ -6,6 +6,18 @@ namespace EventHubProject
     /// </summary>
     public abstract class EventHub
     {
+        /// <summary>
+        /// This event notifies of the exceptions that has occured on calling the subscribed events
+        /// </summary>
+        public event Action<AggregateException> OnCallFailure;
+        /// <summary>
+        /// method to invoke the exception notifier
+        /// </summary>
+        /// <param name="exceptions">The exceptions</param>
+        protected void InvokeOnCallFailure(AggregateException exceptions)
+        {
+            OnCallFailure?.Invoke(exceptions);
+        }
         private static EventHub defaultInstance;
         /// <summary>
         /// The default instance of the singleton class
@@ -47,6 +59,18 @@ namespace EventHubProject
         /// <exception cref="NullReferenceException" />
         /// <param name="eventType">The instance of the event</param>
         public abstract void Post(object eventType);
+        /// <summary>
+        /// Subscribe to a specific type of event
+        /// </summary>
+        /// <typeparam name="T">The type of event</typeparam>
+        /// <param name="actionOnEvent">Passing the event object into the action</param>
+        public abstract void Register<T>(Action<T> actionOnEvent);
+        /// <summary>
+        /// Deregister from a specific type of event
+        /// </summary>
+        /// <typeparam name="T">The type of event</typeparam>
+        /// <param name="actionOnEvent">The action to be deregsitered</param>
+        public abstract void Deregister<T>(Action<T> actionOnEvent);
         /// <summary>
         /// The method to cancel further posting of an event
         /// </summary>
